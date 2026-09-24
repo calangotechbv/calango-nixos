@@ -1,0 +1,38 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Calango Link Opener
+GenericName=Web Browser Chooser
+Comment=Ask the quickshell panel which browser opens this link
+# The calangoOpen placeholder below (see the literal Exec= line) is a token
+# home/apps.nix's desktopEntries substitutes at build time with the absolute
+# store path of the calangoOpen wrapper's bin/calango-open, e.g.
+# /nix/store/.../bin/calango-open %u. No PATH lookup, no shell quoting to
+# survive: xdg-utils' open_generic splits Exec on whitespace WITHOUT
+# honouring quoting, which is why an earlier version of this entry (a quoted
+# `sh -c 'exec "$HOME/.local/bin/calango-open" "$1"' sh %u`, needed when the
+# portal's PATH did not carry ~/.local/bin) broke `xdg-open` from a terminal
+# while GIO's own parser kept portal callers working. A single absolute path
+# has no whitespace to split on and needs no quoting either way.
+Exec=@calangoOpen@ %u
+Icon=web-browser
+Terminal=false
+Categories=Network;WebBrowser;
+# Every type xdg-settings registers for a default browser, not just the two
+# schemes this actually needs -- and that is load-bearing rather than
+# thorough. `xdg-settings set default-web-browser` rewrites the .desktop in
+# place when it has to add a type, which replaces the store symlink with a
+# frozen copy: `--status` then reports it as NOT OURS forever, and editing this
+# file in the repo stops having any effect. Declaring the full set up front
+# leaves xdg-settings nothing to add, so the symlink survives. Measured both
+# ways. Trim this list and that breaks again, silently.
+MimeType=x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/about;x-scheme-handler/unknown;text/html;application/xhtml+xml;
+# Deliberately absent: NoDisplay. It was set here at first, on the reasoning
+# that a link handler is not something you launch from a menu -- which is true,
+# and cost the feature every caller that is not a terminal.
+# xdg-desktop-portal filters candidate handlers through
+# g_app_info_should_show(), and NoDisplay=true makes that false, so the portal
+# skipped this entry entirely and opened links in firefox instead. The price of
+# leaving it out is one dud row in the app launcher; the price of setting it is
+# that flatpaks silently bypass the picker.
+StartupNotify=false
